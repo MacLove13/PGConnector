@@ -50,10 +50,6 @@ public:
 	ResultadoPG* query(string comando) {
 
 		PGresult *consulta = PQexec(this->conexao, comando.c_str());
-		/*if (PQresultStatus(consulta) != PGRES_TUPLES_OK) {
-			return NULL;
-		}*/
-
 		ResultadoPG *resultado = new ResultadoPG(consulta);
 		return resultado;
 	}
@@ -64,13 +60,13 @@ public:
 				PGresult *aux;
 				ResultadoPG *resultado = NULL;
 				while (aux = PQgetResult(this->conexao)) {
-					switch (PQresultStatus(aux)){
+					switch (PQresultStatus(aux)) {
 						case PGRES_TUPLES_OK:
 						case PGRES_BAD_RESPONSE:
 						case PGRES_FATAL_ERROR:
+						case PGRES_COMMAND_OK:
 							resultado = new ResultadoPG(aux);
-							break;
-					}
+					}	
 				}
 				return resultado;
 			}

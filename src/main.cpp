@@ -20,7 +20,7 @@
 
 Conexoes *conexoes;
 Resultados *resultados;
-#define PLUGIN_VERSION "1.0"
+#define PLUGIN_VERSION "1.1"
 typedef void(*logprintf_t)(const char* format, ...);
 
 logprintf_t logprintf;
@@ -43,23 +43,37 @@ PLUGIN_EXPORT bool PLUGIN_CALL Load(void **ppData)
 {
 	pAMXFunctions = ppData[PLUGIN_DATA_AMX_EXPORTS];
 	logprintf = (logprintf_t)ppData[PLUGIN_DATA_LOGPRINTF];
-	logprintf("\nInicializando PGConnector...\n");
+	logprintf("\n\tInitializing PGConnector...\n");
 	conexoes = new Conexoes();
 	resultados = new Resultados();
 	
 	logprintf("===============================");
-	logprintf("PGConnector por Mandrack_FreeZe");
-	logprintf("Versão: %s", PLUGIN_VERSION);
-	logprintf("Versão da libpq: %d", PQlibVersion());
+	logprintf("PGConnector by Mandrack_FreeZe");
+	logprintf("Version: %s", PLUGIN_VERSION);
+	logprintf("Version of libpq: %d", PQlibVersion());
 	logprintf("===============================\n");
-	logprintf("PGConnector inicializada com sucesso.\n");
+	logprintf("PGConnector successfully initialized...\n");
 	return true;
 	
 }
 
 PLUGIN_EXPORT void PLUGIN_CALL Unload()
 {
-	logprintf("PGConnector foi descarregada com sucesso.");
+	//Fechando todas as conexões
+	for (int i = 0; i < MAX_OPEN_CONNECTIONS; ++i) {
+		if (conexoes->recuperarConexao(i) != NULL) {
+			conexoes->recuperarConexao(i)->encerrarConexao();
+		}
+	}
+
+	//Liberando memoria de todos os resultados
+	for (int i = 0; i < MAX_STORED_RESULTS; ++i) {
+		if (resultados->recuperarResultado(i) != NULL) {
+			resultados->recuperarResultado(i)->apagar();
+		}
+	}
+
+	logprintf("PGConnector succesfuly unloaded.");
 }
 
 

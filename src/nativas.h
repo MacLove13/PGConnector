@@ -49,13 +49,17 @@ cell AMX_NATIVE_CALL PG_query(AMX* amx, cell* params) {
 		return -1;
 	}
 	ResultadoPG *resultado = conexao->query(recuperarString(amx, params[2]));
+
+	if (resultado->status() != PGRES_TUPLES_OK && resultado->status() != PGRES_COMMAND_OK) {
+		chamarCallbackErro(amx, resultado->status(), resultado->erro());
+	}
 	return resultados->adicionarResultado(resultado, params[1]);
 }
 
 //native PG_erroResposta(idResposta, strErro[], sizeofStrErro);
 cell AMX_NATIVE_CALL PG_erroResposta(AMX* amx, cell* params) {
 	ResultadoPG *resultado = resultados->recuperarResultado(params[1]);
-	if (resultado->status() != PGRES_TUPLES_OK) {
+	if (resultado->status() != PGRES_TUPLES_OK && resultado->status() != PGRES_COMMAND_OK) {
 		setString(amx, params[2], params[3], resultado->erro());
 		return 1;
 	}

@@ -25,7 +25,7 @@ bool setString(AMX* &amx, cell &param, unsigned int tamanhoParam, string str) {
 	return true;
 }
 
-void chamarCallbackErro(AMX* amx, int codErro, string erro) {
+void chamarCallbackErro(AMX *&amx, int codErro, string erro) {
 	int idx;
 	if (!amx_FindPublic(amx, "OnPostgreSQLError", &idx)) {
 		cell ret, addr;
@@ -36,7 +36,7 @@ void chamarCallbackErro(AMX* amx, int codErro, string erro) {
 	}
 }
 
-void enviarParametroStr(AMX* amx, string str) {
+void enviarParametroStr(AMX *&amx, string str) {
 	cell addr;
 	amx_PushString(amx, &addr, NULL, str.c_str(), NULL, NULL);
 }
@@ -48,12 +48,16 @@ void enviarParametroInt(AMX *amx, int parametro) {
 void assyncQuery(AMX *amx, int idConexao, string comando, string callback) {
 	ResultadoPG *resultado = conexoes->recuperarConexao(idConexao)->assyncQuery(comando);
 	if (resultado == NULL) {
+		if (conexoes->recuperarConexao(idConexao)->status() != CONNECTION_OK) {
+			chamarCallbackErro(amx, conexoes->recuperarConexao(idConexao)->status(), conexoes->recuperarConexao(idConexao)->ultimoErro());
+			return;
+		}
 		chamarCallbackErro(amx, PGCON_CONEXAO_ERROINDEFINIDO, conexoes->recuperarConexao(idConexao)->ultimoErro());
 		return;
 	}
 	int idResultado = resultados->adicionarResultado(resultado, idConexao);
 
-	if (resultado->status() != PGRES_TUPLES_OK) {
+	if (resultado->status() != PGRES_TUPLES_OK && resultado->status() != PGRES_COMMAND_OK) {
 		chamarCallbackErro(amx, resultado->status(), resultado->erro());
 		return;
 	}
